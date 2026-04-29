@@ -1,0 +1,111 @@
+{
+  "theme": "Light",
+  "archetype": "Archetype 1 (Organic & Earthy) - Premium Wealth Management",
+  "vibe": "Premium, trustworthy, distinctive 'Old Money Tech'. Grounded, secure, matte, physical.",
+  "colors": {
+    "background": {
+      "app": "#F9F9F8",
+      "card": "#FFFFFF",
+      "sidebar": "#F3F3F1"
+    },
+    "text": {
+      "primary": "#1C1C19",
+      "secondary": "#6B6A65",
+      "muted": "#9D9C96"
+    },
+    "border": {
+      "default": "#E6E5E1",
+      "focus": "#1A362D"
+    },
+    "brand": {
+      "primary": "#1A362D",
+      "primary_hover": "#2C4F44",
+      "accent": "#C25946",
+      "accent_hover": "#A64A39",
+      "success": "#3C6E47",
+      "danger": "#B94A48"
+    },
+    "charts": [
+      "#1A362D",
+      "#C25946",
+      "#D4A373",
+      "#7B8C7A",
+      "#E2D8CE",
+      "#2C4F44"
+    ]
+  },
+  "typography": {
+    "imports": [
+      "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    ],
+    "families": {
+      "heading": "'Outfit', sans-serif",
+      "body": "'IBM Plex Sans', sans-serif",
+      "mono": "'IBM Plex Mono', monospace"
+    },
+    "scale": {
+      "h1": "text-4xl tracking-tight font-medium",
+      "h2": "text-2xl tracking-tight font-medium",
+      "h3": "text-xl font-medium",
+      "h4": "text-lg font-medium",
+      "body": "text-sm text-[#1C1C19]",
+      "kpi_value": "text-3xl font-medium font-heading tracking-tight",
+      "overline": "text-xs font-mono uppercase tracking-[0.2em] text-[#6B6A65]"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous Spacing Philosophy with Control Room Grid for dense data. Use p-6 or p-8 inside cards to prevent collision.",
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+    "card_padding": "p-6 sm:p-8",
+    "border_radius": "rounded-xl",
+    "shadows": {
+      "card": "shadow-[0_4px_24px_rgba(0,0,0,0.02)]",
+      "dropdown": "shadow-[0_8px_32px_rgba(0,0,0,0.06)]"
+    }
+  },
+  "components": {
+    "sidebar": "Collapsible left-sidebar. Background #F3F3F1. Active state has 2px left border with #1A362D and #E6E5E1 background. Use Phosphor Icons.",
+    "cards": "Flat background (bg-white), 1px subtle border (border-[#E6E5E1]), shadow-card. Hover: -translate-y-[2px], border darkens slightly.",
+    "tables": "Dense but clear. IBM Plex Sans for body, IBM Plex Mono for numeric columns (right-aligned). No vertical borders. 1px bottom border on rows.",
+    "kpi_cards": "Top-left 'North Star' layout. Value in Outfit. Use standard red/green for up/down, but muted (e.g., text-[#B94A48] or text-[#3C6E47]).",
+    "charts": "Recharts. Line charts for portfolio performance with strokeWidth 2, no dots unless hovered. Donut charts for asset allocation. Golden rule: no hover required to see main trends.",
+    "auth_pages": "Split screen layout. Left side: Form with minimal styling, pure white background. Right side: Full bleed image of abstract sand dunes (use provided media URL).",
+    "empty_states": "Minimalist. Avoid generic illustrations. Use a single, large Phosphor icon (light weight) in #9D9C96, plus a clear call-to-action button.",
+    "buttons": "Primary: bg-[#1A362D] text-white rounded-lg hover:bg-[#2C4F44]. Secondary: bg-white border border-[#E6E5E1] text-[#1C1C19] hover:bg-[#F9F9F8]. Add transition-transform active:scale-95."
+  },
+  "icons": {
+    "library": "@phosphor-icons/react",
+    "installation": "yarn add @phosphor-icons/react",
+    "weight": "regular (use light for empty states)"
+  },
+  "motion": {
+    "hover": "transition-all duration-200 ease-out",
+    "page_load": "Staggered fade-in for dashboard widgets.",
+    "charts": "Smooth drawing animation for line charts on mount."
+  },
+  "media_urls": [
+    {
+      "category": "auth_background",
+      "url": "https://images.unsplash.com/photo-1759485683311-0bcfa34eb6b3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMHNhbmQlMjB0ZXh0dXJlfGVufDB8fHx8MTc3NzQ3NTU3Mnww&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract ripples of sand dunes under sunlight. Use for the right half of the split-screen login/signup page. Add a subtle bg-black/10 overlay."
+    }
+  ],
+  "testing": {
+    "requirement": "All interactive and key informational elements MUST include a data-testid attribute (kebab-case, role-based).",
+    "examples": [
+      "login-submit-button",
+      "portfolio-net-worth-value",
+      "asset-row-edit-button",
+      "nav-dashboard-link"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Use pure HTML + Tailwind CSS for main layouts and bento grids. Use Shadcn components for complex interactions (Dialogs, Dropdowns) and heavily customize them.",
+    "Use Recharts for all data visualizations. Map the colors provided in the 'colors.charts' array.",
+    "Implement the UI with a mobile-first approach, ensuring the sidebar collapses to a hamburger menu on small screens.",
+    "For the Auth pages, use the image URL provided in media_urls for a premium split-screen design.",
+    "Use @phosphor-icons/react for all icons to achieve a high-end, sophisticated look.",
+    "Never use pure black or grey. Use the tinted hex codes from the 'colors' object.",
+    "Ensure all numbers, metrics, and data tables use the monospace 'IBM Plex Mono' font for proper alignment."
+  ]
+}
