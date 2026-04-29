@@ -2,69 +2,74 @@
 
 ## Original Problem Statement
 > "build me react application for wealth and asset management react framework should be very light"
+> Follow-up: "add Micronaut capability for JWT and backed customer onboard"
 
-## User Choices (gathered)
-- Scope: **Frontend-only** demo with mock data
-- Features: Portfolio dashboard, Asset CRUD, Transactions log, Performance analytics, Goals & planning
-- Live market data: No (manual entry; static seed prices)
-- Auth: JWT email/password (mocked in localStorage)
-- Design: defaults — design agent produced "Old Money Tech" (Forest Green + Terracotta on Bone White)
+## User Choices
+- Scope: Frontend-only React (light) + later real backend
+- Backend: **Micronaut 4.10 (Java 17)** replacing FastAPI on `0.0.0.0:8001`
+- Auth: JWT bearer + bcrypt, roles `ADMIN` / `CUSTOMER`
+- Onboarding fields: full name, email, phone, country, date of birth
+- Persistence: H2 file-based at `/app/backend/data/kindred.mv.db`
+- Portfolio data (assets/tx/goals): still localStorage (out of scope for backend swap)
 
 ## Architecture
-- **React 19** + React Router 7 + Tailwind + Shadcn UI components (Dialog, Select, DropdownMenu, Sonner)
-- **Recharts** for all data visualizations
-- **@phosphor-icons/react** for iconography
-- **Auth**: `AuthProvider` context backed by `localStorage` (`wm_users`, `wm_session`); fake JWT structure
-- **Data**: per-user keyed `localStorage` store (`wm_assets_<uid>`, `wm_txs_<uid>`, `wm_goals_<uid>`); `initUserData` seeds first-time users
-- Routes:
-  - `/login`, `/signup` (PublicOnly)
-  - `/dashboard`, `/assets`, `/transactions`, `/analytics`, `/goals` (ProtectedRoute + AppLayout)
+- **Backend** — Micronaut 4.10.13 (Java 17), Maven build → `target/backend-0.1.jar`
+  - `micronaut-data-hibernate-jpa` + Hikari + H2 (file mode, `MODE=LEGACY`)
+  - `micronaut-security-jwt` (HS256, 2-hour expiry)
+  - `at.favre.lib:bcrypt:0.10.2` for password hashing
+  - Endpoints: `POST /api/auth/signup`, `POST /api/auth/login`, `GET /api/me`, `GET /api/health`, `GET/PATCH /api/customers`, `GET /api/customers/{id}`
+  - `AdminSeeder` creates the admin user on first boot
+  - Supervisor command: `/usr/bin/java -Dmicronaut.environments=prod -jar /app/backend/target/backend-0.1.jar`
+- **Frontend** — React 19 + Tailwind + Shadcn UI + Recharts + Phosphor
+  - `lib/api.js` axios client with bearer interceptor
+  - `lib/auth.jsx` calls real backend, persists `wm_session` in localStorage
+  - 2-step signup (credentials → onboarding fields)
+  - Portfolio modules unchanged
 
-## User Personas
-- **Solo investor** tracking diversified holdings (stocks, bonds, real estate, crypto, cash)
-- **Family wealth lead** monitoring net worth, allocation, and long-horizon goals
-- **Advisor demo** showcasing portfolio review with clients
-
-## Core Requirements (Static)
-1. Authenticate users (signup/login/logout) with persistent session
-2. Per-user portfolio data isolated in localStorage
-3. Dashboard with KPIs, performance chart, allocation, top holdings, recent activity
-4. Full CRUD for assets, transactions, goals
-5. Analytics with portfolio-vs-benchmark line chart, gain/loss per asset, allocation, winners/losers
-6. Responsive layout with collapsible mobile sidebar
-7. Premium "Old Money Tech" aesthetic — distinctive, not generic fintech
+## Environment Variables (backend)
+- `JWT_SECRET` — HS256 signing secret (set via supervisor)
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD` — seeded admin (default `admin@kindred.local` / `Admin@12345`)
+- `H2_FILE` — H2 file path (default `/app/backend/data/kindred`)
 
 ## Implementation Status — 2026-04-29
-- ✅ AuthProvider + JWT-mock auth (signup/login/logout)
-- ✅ Sidebar layout with NavLink active states + user dropdown
-- ✅ Dashboard (4 KPI cards, area chart with benchmark, donut allocation, top holdings, recent tx)
-- ✅ Assets page (search, type filter, add/edit/delete dialog, summary cards)
-- ✅ Transactions page (buy/sell record, filter tabs, summary cards, qty-adjusts-asset)
-- ✅ Analytics page (12M line chart vs benchmark, contribution bar chart, allocation bars, winners/losers)
-- ✅ Goals page (create/edit/delete, progress bars, deadline countdown)
-- ✅ Per-user localStorage seed data (7 assets, 10 txs, 3 goals)
-- ✅ data-testid coverage on all interactive elements
-- ✅ Testing agent: 10/10 critical flows pass
+- ✅ Frontend wealth UI (Dashboard, Assets, Transactions, Analytics, Goals)
+- ✅ Mock auth (replaced)
+- ✅ Micronaut + Maven project under `/app/backend` with all controllers/DTOs/security
+- ✅ Admin seeded on boot (idempotent)
+- ✅ JWT issuance + role enforcement (ADMIN / CUSTOMER) verified
+- ✅ Bcrypt password hashing (cost 12)
+- ✅ H2 file DB with Hibernate `hbm2ddl.auto=update`
+- ✅ Frontend rewired to real backend, 2-step onboarding
+- ✅ Session revalidation via `/api/me` on app load
+- ✅ Testing agent: 20/20 backend pytest cases pass, all frontend flows pass
 
 ## Backlog
 ### P1
-- Persist edits with toast undo
-- Asset detail drilldown with per-asset transaction history
-- CSV import/export (assets + transactions)
-- Currency selector (USD/EUR/GBP) with FX rates
-- Optional CoinGecko/Alpha Vantage live price refresh
+- Password reset / email verification (token + email link)
+- Admin: create/disable/delete customer, assign role
+- Refresh tokens (sliding expiry) for longer sessions
+- Migrate H2 → Postgres for production deployment
+- Move portfolio data (assets/tx/goals) into the backend (CRUD endpoints + per-user scoping)
 
 ### P2
-- Account & profile settings page (display name, theme)
-- Goal contributions: link a goal to a savings asset
-- Tax lot tracking (FIFO/LIFO) for realized P/L
-- Risk score / volatility analytics
-- Multi-account portfolios (taxable, IRA, 401k buckets)
-- Light/dark theme toggle with custom dark palette
-- Backend migration: FastAPI + MongoDB to persist data server-side
-- Real authentication (Emergent Google login or proper JWT API)
+- 2FA (TOTP) on admin
+- Audit log of admin actions
+- KYC fields (address, occupation, source of funds, risk profile, ID upload)
+- OpenAPI spec + Swagger UI (Micronaut OpenAPI)
+- GraalVM native image for fast cold-start
+- Rate limit auth endpoints, account lockout on brute force
+- Switch to httpOnly refresh cookies + bearer access tokens
+
+## Operational Notes
+- Forked containers may not ship a JRE. If `/api/health` 502s after fork:
+  ```
+  apt-get install -y openjdk-17-jdk-headless
+  sudo supervisorctl restart backend
+  ```
+- Wipe DB: `rm /app/backend/data/kindred.*` then `sudo supervisorctl restart backend` (admin reseeds).
+- Build: `cd /app/backend && mvn -DskipTests -Denforcer.skip=true package`
 
 ## Next Tasks
-1. (Optional) Add min-height/aspect to Recharts wrappers to silence dev warnings.
-2. Decide on backend persistence vs. continuing as offline-first PWA.
-3. Add CSV export — common ask for wealth tools.
+1. Decide: persist portfolio data server-side too (recommended P1).
+2. Add password reset + admin user-management screens.
+3. Bake JDK into base image for reliable forks (deployment concern).
