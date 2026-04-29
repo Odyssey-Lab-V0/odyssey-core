@@ -1,0 +1,43 @@
+{
+  "summary": "Full backend (Micronaut/Java + H2 + JWT) and frontend (React /signup, /login, session, logout) testing for Kindred Wealth. Backend: 20/20 pytest tests pass (health, signup, validation, login, /api/me, role enforcement on /api/customers, self/admin access on /api/customers/{id}, PATCH onboarding updates, JWT persistence across backend restart). Frontend: 2-step signup → dashboard, login (wrong + correct creds), session persistence on reload, user-menu logout, and protected-route redirect all working. Fixed environment blocker: Java JRE was missing from the container so the backend supervisor was in FATAL state (502 on /api/health); installed openjdk-17-jre-headless and the backend started cleanly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/auth/signup, /api/auth/login", "issue": "Backend silently lowercases email on storage (canonicalisation). Tests written with mixed-case TEST_ prefix initially failed; behavior is fine but should be documented and the signup response should reflect the canonical (lowercased) value (it already does). Frontend already lowercases before submit, so OK."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard (Recharts panels)", "issues": ["Multiple console warnings: 'The width(-1) and height(-1) of chart should be greater than 0' from Recharts ResponsiveContainer when parent layout is briefly 0x0 on mount. Cosmetic only — charts render correctly after layout settles."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Note for deploy/runbook: container needs a JRE 17 on PATH for the supervisor command `/usr/bin/java ... -jar backend-0.1.jar`. Without it the backend goes into FATAL with 'can't find command /usr/bin/java'. Either bake openjdk-17-jre-headless into the base image or pin the supervisor command to a vendored JDK so a forked env survives.",
+    "Optional polish: add minWidth/minHeight (or fixed height) to Recharts ResponsiveContainer parents to silence width(-1)/height(-1) warnings on first mount.",
+    "Optional UX: consider adding an explicit `data-testid=\"logout-button\"` on the Sign out menu item (currently discoverable only via `user-menu-trigger` → text 'Sign out')."
+  ],
+  "critical_code_review_comments": [
+    "Auth flow: bcrypt + JWT (HS256, 2h), Authorization: Bearer enforcement, 401/403 split, and self-vs-admin authorization on /api/customers/{id} all behave per spec.",
+    "Validation: 400 on short password (<8) and missing fullName confirmed; 409 with {error:'email_taken'} on duplicate signup confirmed.",
+    "JWT persistence: token issued before `supervisorctl restart backend` continues to validate after restart (H2 file DB + fixed JWT_SECRET in supervisor env). Confirmed end-to-end via /api/me.",
+    "Frontend session: localStorage `wm_session` stores {token,user{id,fullName,email,phone,country,dateOfBirth,role,createdAt}}; on reload `auth.jsx` revalidates via /api/me and keeps the user signed in. Logout clears the key and protected routes redirect to /login. Verified.",
+    "Env hygiene: frontend uses REACT_APP_BACKEND_URL only; backend reads JWT_SECRET / ADMIN_EMAIL / ADMIN_PASSWORD / H2_FILE from supervisor env. No hardcoded secrets in code."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py (created — 20 pytest cases covering all auth + onboarding scenarios)",
+    "Installed openjdk-17-jre-headless system package so supervisor can launch the Micronaut jar (otherwise backend was in FATAL state)."
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "ADMIN admin@kindred.local / Admin@12345 (auto-seeded). Customers: created on the fly via POST /api/auth/signup with unique lowercase emails (e.g. test_*@kindred.test).",
+  "seed_data_creation": "Each test run creates ~6 throwaway CUSTOMER accounts via /api/auth/signup (lowercase TEST_-style prefixes). Not cleaned up because no admin DELETE endpoint exists; fine for H2 file DB. To reset: rm /app/backend/data/kindred.* && sudo supervisorctl restart backend.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "If the backend returns 502 on /api/health, first run `which java`; if missing, `apt-get install -y openjdk-17-jre-headless && sudo supervisorctl restart backend`. Backend takes ~5s to come up. Use lowercase emails when asserting equality (server normalises). Logout is reached via [data-testid=user-menu-trigger] → text 'Sign out'. Portfolio data (assets/transactions/goals) is still localStorage-mocked and out of scope.",
+  "rca of the issue": "Initial 502 on /api/health was not a code bug. The forked container shipped without a JRE so supervisor could not exec `/usr/bin/java`. Backend status was FATAL with 'can't find command /usr/bin/java'. Fix: `apt-get install -y openjdk-17-jre-headless` then `sudo supervisorctl restart backend`. Health 200 within ~5s of restart; all 20 backend tests pass. Long-term mitigation: bake JDK17 into the base image or vendor it so a supervisor-managed Micronaut app survives env forks."
+}

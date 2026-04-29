@@ -86,7 +86,7 @@ const AppLayout = () => {
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
 
-  const initials = (session?.user?.name || "U")
+  const initials = (session?.user?.fullName || session?.user?.email || "U")
     .split(" ")
     .map((s) => s[0])
     .slice(0, 2)
@@ -132,7 +132,7 @@ const AppLayout = () => {
                   {initials.toUpperCase()}
                 </div>
                 <span className="hidden sm:block text-sm">
-                  {session?.user?.name || session?.user?.email}
+                  {session?.user?.fullName || session?.user?.email}
                 </span>
                 <CaretDown size={14} className="text-[#6B6A65]" />
               </DropdownMenuTrigger>

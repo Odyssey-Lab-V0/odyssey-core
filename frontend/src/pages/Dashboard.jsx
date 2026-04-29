@@ -81,7 +81,7 @@ const Dashboard = () => {
         <div>
           <div className="overline">Overview · {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</div>
           <h1 className="font-heading text-4xl sm:text-5xl mt-2 font-medium tracking-tight">
-            Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, {session.user.name?.split(" ")[0] || "there"}.
+            Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, {session.user.fullName?.split(" ")[0] || session.user.email?.split("@")[0] || "there"}.
           </h1>
         </div>
         <Link
